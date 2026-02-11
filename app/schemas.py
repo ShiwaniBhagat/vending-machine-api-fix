@@ -19,13 +19,13 @@ class SlotResponse(BaseModel):
 # --- Item ---
 class ItemCreate(BaseModel):
     name: str
-    price: int = Field(..., ge=0)  # Allow any non-negative price
+    price: float = Field(..., ge=0)  # Allow any non-negative price // Allow float values
     quantity: int = Field(..., gt=0)
 
 
 class ItemBulkEntry(BaseModel):
     name: str
-    price: int = Field(..., ge=0)  # Allow any non-negative price
+    price: float = Field(..., ge=0)  # Allow any non-negative price // Allow float value
     quantity: int = Field(..., gt=0)
 
 
@@ -36,7 +36,7 @@ class ItemBulkRequest(BaseModel):
 class ItemResponse(BaseModel):
     id: str
     name: str
-    price: int
+    price: float  # float values are allowed as well for price
     quantity: int
 
     model_config = {"from_attributes": True}
@@ -47,14 +47,14 @@ class ItemDetailResponse(ItemResponse):
 
 
 class ItemPriceUpdate(BaseModel):
-    price: int = Field(..., gt=0)
+    price: float = Field(..., gt=0)
 
 
 # --- Slot full view ---
 class SlotFullViewItem(BaseModel):
     id: str
     name: str
-    price: int
+    price: float
     quantity: int
 
     model_config = {"from_attributes": True}
@@ -64,7 +64,7 @@ class SlotFullView(BaseModel):
     id: str
     code: str
     capacity: int
-    items: list[SlotFullViewItem]
+    items: list[SlotFullViewItem] = [] # default empty list
 
     model_config = {"from_attributes": True}
 
@@ -72,22 +72,22 @@ class SlotFullView(BaseModel):
 # --- Purchase ---
 class PurchaseRequest(BaseModel):
     item_id: str
-    cash_inserted: int = Field(..., ge=0)
+    cash_inserted: float = Field(..., ge=0) # allow float coins
 
 
 class PurchaseResponse(BaseModel):
     item: str
-    price: int
-    cash_inserted: int
-    change_returned: int
+    price: float
+    cash_inserted: float  # Allow float values as well
+    change_returned: float
     remaining_quantity: int
     message: str
 
 
 class InsufficientCashError(BaseModel):
     error: str = "Insufficient cash"
-    required: int
-    inserted: int
+    required: float
+    inserted: float
 
 
 class OutOfStockError(BaseModel):
@@ -110,5 +110,5 @@ class BulkRemoveBody(BaseModel):
 
 # --- Change breakdown (bonus) ---
 class ChangeBreakdownResponse(BaseModel):
-    change: int
-    denominations: dict[str, int]
+    change: float
+    denominations: dict[str, int]={} # default empty dict
