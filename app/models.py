@@ -15,14 +15,21 @@ def generate_uuid():
 class Slot(Base):
     __tablename__ = "slots"
 
-    id = Column(CHAR(36), primary_key=True, default=generate_uuid)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
     code = Column(String(32), unique=True, nullable=False, index=True)
     capacity = Column(Integer, nullable=False)
     current_item_count = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    items = relationship("Item", back_populates="slot", cascade="save-update, merge")
+   # Use cascade to delete items if slot is deleted
+    items = relationship(
+        "Item",
+        back_populates="slot",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
 
 
 class Item(Base):
