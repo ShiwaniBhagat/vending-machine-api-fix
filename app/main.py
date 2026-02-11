@@ -14,11 +14,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Vending Machine API", lifespan=lifespan)
 
-app.include_router(slots.router)
-app.include_router(items.router)
-app.include_router(purchase.router)
+# Include routers with prefixes and tags
+app.include_router(slots.router, prefix="/slots", tags=["Slots"])
+app.include_router(items.router, prefix="/items", tags=["Items"])
+app.include_router(purchase.router, prefix="/purchase", tags=["Purchase"])
 
 
-@app.get("/health")
+@app.get("/health",tags=["Health"])
 def health():
     return {"status": "ok"}
