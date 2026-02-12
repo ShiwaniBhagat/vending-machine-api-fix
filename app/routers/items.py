@@ -31,7 +31,8 @@ def get_item(item_id: str, db: Session = Depends(get_db)):
         name=item.name,
         price=item.price,
         quantity=item.quantity,
-        slot_id=item.slot_id,
+        slot_id=iitem.slot_id or "",  # Handle None slot_id gracefully
+    )
     )
 
 
@@ -55,15 +56,17 @@ def remove_item_from_slot(
     quantity: int | None = Query(None, gt=0),
     db: Session = Depends(get_db),
 ):
-    try:
-        item_service.remove_item_quantity(db, slot_id, item_id, quantity)
-        return MessageResponse(message="Item(s) removed successfully")
-    except ValueError as e:
-        if str(e) == "slot_not_found":
-            _slot_404()
-        if str(e) == "item_not_found":
-            _item_404()
-        raise
+    slot = item_service.get_slot_by_id(db, slot_id)
+    if not slot:
+        _slot_404()
+    item = item_service.get_item_by_id(db, item_id)
+    if not item:
+        _item_404()
+
+    # Remove full quantity if quantity is None
+    quantity_to_remove = quantity or item.quantity
+    item_service.remove_item_quantity(db, slot_id, item_id, quantity_to_remove)
+    return MessageResponse(message="Item(s) removed successfully")
 
 
 @router.delete("/slots/{slot_id}/items", response_model=MessageResponse)
@@ -72,11 +75,11 @@ def bulk_remove_items(
     body: BulkRemoveBody | None = Body(None),
     db: Session = Depends(get_db),
 ):
-    item_ids = body.item_ids if body else None
-    try:
-        item_service.bulk_remove_items(db, slot_id, item_ids)
-        return MessageResponse(message="Slot cleared successfully")
-    except ValueError as e:
-        if str(e) == "slot_not_found":
-            _slot_404()
-        raise
+    slot = item_service.get_slot_by_id(db, slot_id)
+    if not slot:
+        _slot_404()
+
+    item_ids = body.item_ids if body and body.item_ids else None
+    # If item_ids is None, remove all items
+    item_service.bulk_remove_items(db, slot_id, item_ids)
+    return MessageResponse(message="Slot cleared successfully")
